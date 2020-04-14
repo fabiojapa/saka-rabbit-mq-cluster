@@ -1,0 +1,40 @@
+version: '2'
+services:
+  rabbitmq3:
+    image: rabbitmq:3-management
+    hostname: rabbitmq3
+    environment:
+      RABBITMQ_ERLANG_COOKIE: '12345'
+    entrypoint:
+    - /usr/local/bin/cluster-entrypoint.sh
+    volumes:
+    - /app/rabbitmq-cfg/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+    - /app/rabbitmq:/var/lib/rabbitmq
+  rabbitmq2:
+    image: rabbitmq:3-management
+    hostname: rabbitmq2
+    environment:
+      RABBITMQ_ERLANG_COOKIE: '12345'
+    entrypoint:
+    - /usr/local/bin/cluster-entrypoint.sh
+    volumes:
+    - /app/rabbitmq-cfg/cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+    - /app/rabbitmq:/var/lib/rabbitmq
+  rabbitmq1:
+    image: rabbitmq:3-management
+    hostname: rabbitmq1
+    environment:
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_ERLANG_COOKIE: '12345'
+    volumes:
+    - /app/rabbitmq:/var/lib/rabbitmq
+  rabbitmq:
+    image: rancher/lb-service-haproxy:v0.9.11
+    ports:
+    - 8079:8079/tcp
+    labels:
+      io.rancher.container.agent.role: environmentAdmin,agent
+      io.rancher.container.agent_service.drain_provider: 'true'
+      io.rancher.container.create_agent: 'true'

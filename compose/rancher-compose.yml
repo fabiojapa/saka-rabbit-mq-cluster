@@ -1,0 +1,51 @@
+version: '2'
+services:
+  rabbitmq3:
+    scale: 1
+    start_on_create: true
+  rabbitmq2:
+    scale: 1
+    start_on_create: true
+  rabbitmq1:
+    scale: 1
+    start_on_create: true
+  rabbitmq:
+    scale: 1
+    start_on_create: true
+    lb_config:
+      certs: []
+      config: "global\n        log 127.0.0.1   local1\n        maxconn 4096\n \ndefaults\n\
+        \        log     global\n        mode    tcp\n        option  tcplog\n   \
+        \     retries 3\n        option redispatch\n        maxconn 2000\n       \
+        \ timeout connect 5000\n        timeout client 50000\n        timeout server\
+        \ 50000\n \nlisten  stats\n        bind *:1936\n        mode http\n      \
+        \  stats enable\n        stats hide-version\n        stats realm Haproxy\\\
+        \ Statistics\n        stats uri /\n \nlisten rabbitmq\n        bind *:5672\n\
+        \        mode            tcp\n        balance         roundrobin\n       \
+        \ timeout client  3h\n        timeout server  3h\n        option         \
+        \ clitcpka\n        server          rabbitmq1 rabbitmq1:5672  check inter\
+        \ 5s rise 2 fall 3\n        server          rabbitmq2 rabbitmq2:5672  check\
+        \ inter 5s rise 2 fall 3\n        server          rabbitmq3 rabbitmq3:5672\
+        \  check inter 5s rise 2 fall 3\n\nlisten mgmt\n        bind *:15672\n   \
+        \     mode            tcp\n        balance         roundrobin\n        timeout\
+        \ client  3h\n        timeout server  3h\n        option          clitcpka\n\
+        \        server          rabbitmq1 rabbitmq1:15672  check inter 5s rise 2\
+        \ fall 3\n        server          rabbitmq2 rabbitmq2:15672  check inter 5s\
+        \ rise 2 fall 3\n        server          rabbitmq3 rabbitmq3:15672  check\
+        \ inter 5s rise 2 fall 3"
+      port_rules:
+      - hostname: rabbit
+        priority: 1
+        protocol: http
+        service: rabbitmq1
+        source_port: 8079
+        target_port: 5672
+    health_check:
+      healthy_threshold: 2
+      response_timeout: 2000
+      port: 42
+      unhealthy_threshold: 3
+      initializing_timeout: 60000
+      interval: 2000
+      strategy: recreate
+      reinitializing_timeout: 60000
